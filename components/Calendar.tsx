@@ -201,14 +201,18 @@ export default function Calendar() {
           ))}
         </div>
 
-        {/* Refresh indicator */}
-        {loading && (
-          <div style={{ color: '#8888aa' }}>
-            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          </div>
-        )}
+        {/* Refresh button */}
+        <button
+          onClick={() => { setLoading(true); fetchEvents(); }}
+          className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+          style={{ color: loading ? '#3d9fff' : '#8888aa' }}
+          aria-label="Refresh"
+          title="Refresh"
+        >
+          <svg className={loading ? 'animate-spin' : ''} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        </button>
       </header>
 
       {/* Main content */}

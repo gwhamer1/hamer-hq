@@ -18,12 +18,18 @@ export async function getEvents(): Promise<CalendarEvent[]> {
 
   const data = await response.json();
 
-  if (!data.result) {
+  if (data.result === null || data.result === undefined) {
     return [];
   }
 
   try {
-    const parsed = JSON.parse(data.result);
+    // Upstash stores the raw body bytes, so we parse once.
+    // If the result is still a string after first parse (legacy double-encoded data),
+    // parse again to get the actual array.
+    let parsed = JSON.parse(data.result);
+    if (typeof parsed === 'string') {
+      parsed = JSON.parse(parsed);
+    }
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -31,13 +37,15 @@ export async function getEvents(): Promise<CalendarEvent[]> {
 }
 
 export async function saveEvents(events: CalendarEvent[]): Promise<void> {
+  // Send the JSON array string as the body (single-encoded).
+  // Upstash stores the raw body bytes, so data.result on GET will be the JSON array string.
   const response = await fetch(`${REDIS_URL}/set/${KEY}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${REDIS_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(JSON.stringify(events)),
+    body: JSON.stringify(events),
   });
 
   if (!response.ok) {
