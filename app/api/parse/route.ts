@@ -34,7 +34,7 @@ Return ONLY valid JSON, no explanation or markdown.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 512,
         system: systemPrompt,
         messages: [
