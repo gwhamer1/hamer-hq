@@ -36,6 +36,8 @@ export default function Calendar() {
   const [addPanelInitialDate, setAddPanelInitialDate] = useState<string | undefined>();
   const [addPanelInitialTime, setAddPanelInitialTime] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -81,9 +83,26 @@ export default function Calendar() {
     setShowAddPanel(true);
   }
 
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
   function handleEventAdded(event: CalendarEvent) {
     setEvents((prev) => [...prev, event]);
     setShowAddPanel(false);
+    showToast('Event added');
+  }
+
+  function handleEditEvent(event: CalendarEvent) {
+    setSelectedEvent(null);
+    setEditingEvent(event);
+  }
+
+  function handleEventUpdated(updated: CalendarEvent) {
+    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    setEditingEvent(null);
+    showToast('Event updated');
   }
 
   async function handleDeleteEvent(id: string) {
@@ -263,6 +282,7 @@ export default function Calendar() {
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onDelete={handleDeleteEvent}
+          onEdit={handleEditEvent}
         />
       )}
 
@@ -274,6 +294,26 @@ export default function Calendar() {
           onAdd={handleEventAdded}
           onClose={() => setShowAddPanel(false)}
         />
+      )}
+
+      {/* Edit Event Panel */}
+      {editingEvent && (
+        <AddEventPanel
+          editEvent={editingEvent}
+          onAdd={handleEventAdded}
+          onUpdate={handleEventUpdated}
+          onClose={() => setEditingEvent(null)}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-semibold shadow-2xl animate-fade-in"
+          style={{ backgroundColor: '#28c76f', color: '#fff', pointerEvents: 'none' }}
+        >
+          {toast}
+        </div>
       )}
     </div>
   );

@@ -6,6 +6,7 @@ interface EventModalProps {
   event: CalendarEvent;
   onClose: () => void;
   onDelete: (id: string) => void;
+  onEdit: (event: CalendarEvent) => void;
 }
 
 function formatTime(time: string): string {
@@ -27,7 +28,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function EventModal({ event, onClose, onDelete }: EventModalProps) {
+export default function EventModal({ event, onClose, onDelete, onEdit }: EventModalProps) {
   const color = CATEGORY_COLORS[event.category];
   const label = CATEGORY_LABELS[event.category];
 
@@ -124,14 +125,25 @@ export default function EventModal({ event, onClose, onDelete }: EventModalProps
             </div>
           )}
 
-          {/* Delete button */}
-          <div className="mt-6 pt-4" style={{ borderTop: '1px solid #2a2a45' }}>
+          {/* Action buttons */}
+          <div className="mt-6 pt-4 flex gap-3" style={{ borderTop: '1px solid #2a2a45' }}>
+            <button
+              onClick={() => onEdit(event)}
+              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:opacity-90 active:scale-95 flex items-center justify-center gap-2"
+              style={{ backgroundColor: '#2a2a45', color: '#e8e8f0', border: '1px solid #3a3a5c' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit
+            </button>
             <button
               onClick={handleDelete}
-              className="w-full py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
+              className="flex-1 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
               style={{ backgroundColor: '#ff3b30', color: '#fff' }}
             >
-              Delete Event
+              Delete
             </button>
           </div>
         </div>

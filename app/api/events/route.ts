@@ -32,6 +32,34 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const events = await getEvents();
+    const index = events.findIndex((e: CalendarEvent) => e.id === id);
+
+    if (index === -1) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const updatedEvent: CalendarEvent = { ...body, id };
+    events[index] = updatedEvent;
+    await saveEvents(events);
+
+    return NextResponse.json(updatedEvent);
+  } catch (error) {
+    console.error('PUT /api/events error:', error);
+    return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
