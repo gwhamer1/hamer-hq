@@ -5,15 +5,19 @@ import { CalendarEvent } from '@/lib/types';
 import WeekView from './WeekView';
 import MonthView from './MonthView';
 import AgendaView from './AgendaView';
+import DayView from './DayView';
 import EventModal from './EventModal';
 import AddEventPanel from './AddEventPanel';
+import VoiceRecorder from './VoiceRecorder';
 
-type ViewType = 'week' | 'month' | 'agenda';
+type ViewType = 'week' | 'month' | 'agenda' | 'day';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function getWeekRange(date: Date): string {
   const start = new Date(date);
@@ -22,9 +26,17 @@ function getWeekRange(date: Date): string {
   end.setDate(start.getDate() + 6);
 
   if (start.getMonth() === end.getMonth()) {
-    return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
+    return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()}\u2013${end.getDate()}, ${start.getFullYear()}`;
   }
-  return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()} – ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+  return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()} \u2013 ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+}
+
+function getDayTitle(date: Date): string {
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+  const dateStr = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  const prefix = dateStr === todayStr ? 'Today \u2014 ' : '';
+  return `${prefix}${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
 export default function Calendar() {
@@ -35,6 +47,9 @@ export default function Calendar() {
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addPanelInitialDate, setAddPanelInitialDate] = useState<string | undefined>();
   const [addPanelInitialTime, setAddPanelInitialTime] = useState<string | undefined>();
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [voiceInitialDate, setVoiceInitialDate] = useState<string | undefined>();
+  const [voiceInitialTime, setVoiceInitialTime] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -55,8 +70,6 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchEvents();
-
-    // Poll for new events every 30 seconds
     const interval = setInterval(fetchEvents, 30000);
     return () => clearInterval(interval);
   }, [fetchEvents]);
@@ -67,6 +80,8 @@ export default function Calendar() {
       d.setDate(d.getDate() + direction * 7);
     } else if (view === 'month') {
       d.setMonth(d.getMonth() + direction);
+    } else if (view === 'day') {
+      d.setDate(d.getDate() + direction);
     } else {
       d.setDate(d.getDate() + direction * 7);
     }
@@ -83,6 +98,12 @@ export default function Calendar() {
     setShowAddPanel(true);
   }
 
+  function openVoiceRecorder(date?: string, time?: string) {
+    setVoiceInitialDate(date);
+    setVoiceInitialTime(time);
+    setShowVoiceRecorder(true);
+  }
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -91,6 +112,7 @@ export default function Calendar() {
   function handleEventAdded(event: CalendarEvent) {
     setEvents((prev) => [...prev, event]);
     setShowAddPanel(false);
+    setShowVoiceRecorder(false);
     showToast('Event added');
   }
 
@@ -124,6 +146,7 @@ export default function Calendar() {
   function getHeaderTitle(): string {
     if (view === 'week') return getWeekRange(currentDate);
     if (view === 'month') return `${MONTH_NAMES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    if (view === 'day') return getDayTitle(currentDate);
     return 'Upcoming';
   }
 
@@ -131,6 +154,7 @@ export default function Calendar() {
     { key: 'week', label: 'Week' },
     { key: 'month', label: 'Month' },
     { key: 'agenda', label: 'Agenda' },
+    { key: 'day', label: 'Day' },
   ];
 
   return (
@@ -258,11 +282,19 @@ export default function Calendar() {
             onEventClick={setSelectedEvent}
           />
         )}
+        {view === 'day' && (
+          <DayView
+            events={events}
+            currentDate={currentDate}
+            onEventClick={setSelectedEvent}
+            onTimeSlotClick={(date, time) => openVoiceRecorder(date, time)}
+          />
+        )}
       </main>
 
-      {/* FAB */}
+      {/* FAB — immediately opens voice recorder */}
       <button
-        onClick={() => openAddPanel()}
+        onClick={() => openVoiceRecorder()}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
         style={{
           backgroundColor: '#3d9fff',
@@ -286,7 +318,17 @@ export default function Calendar() {
         />
       )}
 
-      {/* Add Event Panel */}
+      {/* Voice Recorder */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          initialDate={voiceInitialDate}
+          initialTime={voiceInitialTime}
+          onEventSaved={handleEventAdded}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
+
+      {/* Add Event Panel (used by week/month time slot clicks and text entry fallback) */}
       {showAddPanel && (
         <AddEventPanel
           initialDate={addPanelInitialDate}

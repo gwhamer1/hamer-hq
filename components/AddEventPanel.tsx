@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { CalendarEvent, CATEGORY_COLORS, Category } from '@/lib/types';
+import { CalendarEvent, CATEGORY_COLORS, Category, Owner } from '@/lib/types';
 
 interface AddEventPanelProps {
   initialDate?: string;
@@ -45,6 +45,7 @@ export default function AddEventPanel({
   const [editTime, setEditTime] = useState(editEvent?.time || '');
   const [editEndTime, setEditEndTime] = useState(editEvent?.endTime || '');
   const [editCategory, setEditCategory] = useState<Category>(editEvent?.category || 'Personal');
+  const [editOwner, setEditOwner] = useState<Owner | ''>(editEvent?.owner || '');
   const [editNote, setEditNote] = useState(editEvent?.note || '');
 
   const [loading, setLoading] = useState(false);
@@ -137,6 +138,7 @@ export default function AddEventPanel({
         title: editTitle.trim(),
         date: editDate,
         category: editCategory,
+        ...(editOwner && { owner: editOwner }),
         ...(editTime && { time: editTime }),
         ...(editEndTime && { endTime: editEndTime }),
         ...(editNote.trim() && { note: editNote.trim() }),
@@ -274,6 +276,29 @@ export default function AddEventPanel({
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Owner */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Owner</label>
+                <div className="flex gap-2">
+                  {(['Gary', 'Andrea', ''] as const).map((o) => (
+                    <button
+                      key={o === '' ? 'none' : o}
+                      type="button"
+                      onClick={() => setEditOwner(o)}
+                      className="text-xs px-3 py-1.5 rounded-full font-semibold transition-all"
+                      style={{
+                        backgroundColor: editOwner === o ? '#3d9fff' : '#3d9fff22',
+                        color: editOwner === o ? '#fff' : '#3d9fff',
+                        border: `1px solid ${editOwner === o ? '#3d9fff' : '#3d9fff44'}`,
+                      }}
+                      disabled={loading}
+                    >
+                      {o === '' ? 'None' : o}
+                    </button>
+                  ))}
                 </div>
               </div>
 

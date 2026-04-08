@@ -1,4 +1,5 @@
 export type Category = 'AIL' | 'SPS' | 'TPB' | 'Personal';
+export type Owner = 'Gary' | 'Andrea';
 
 export interface CalendarEvent {
   id: string;
@@ -7,6 +8,7 @@ export interface CalendarEvent {
   time?: string; // HH:MM (24hr)
   endTime?: string; // HH:MM (24hr)
   category: Category;
+  owner?: Owner;
   note?: string;
 }
 
